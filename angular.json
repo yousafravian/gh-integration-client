@@ -32,6 +32,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -67,7 +68,8 @@
               "buildTarget": "gh-integration-client:build:production"
             },
             "development": {
-              "buildTarget": "gh-integration-client:build:development"
+              "buildTarget": "gh-integration-client:build:development",
+              "proxyConfig": "dev-proxy.json"
             }
           },
           "defaultConfiguration": "development"
@@ -91,6 +93,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -98,5 +101,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "0bfa0d09-3a4a-454a-a656-fbce4cf65e7f"
   }
 }

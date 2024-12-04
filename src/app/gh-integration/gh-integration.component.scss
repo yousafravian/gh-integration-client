@@ -1,0 +1,19 @@
+.integration-content {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  &.align-end {
+    align-items: end;
+  }
+}
+
+.header-align .mat-expansion-panel-header-description {
+  justify-content: space-between;
+  align-items: center;
+  color: var(--gray);
+}
+
+.data-container {
+  padding: 1em 0;
+}

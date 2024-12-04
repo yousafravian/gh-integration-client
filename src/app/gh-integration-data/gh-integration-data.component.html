@@ -1,0 +1,31 @@
+<!-- The AG Grid component -->
+
+<div class="fields-container">
+  <mat-form-field>
+    <mat-label>Integration</mat-label>
+    <mat-select>
+      <mat-option value="github">Github</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Entity</mat-label>
+    <mat-select>
+      <mat-option value="projects">Projects</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field floatLabel="always">
+    <mat-label>Search</mat-label>
+    <input matInput [(ngModel)]="searchTerm"/>
+  </mat-form-field>
+</div>
+<ag-grid-angular
+  class="ag-theme-quartz"
+  style="height: calc(100vh - 180px);"
+  [rowData]="filteredData()"
+  [columnDefs]="colDefs"
+  [defaultColDef]="defaultColDef"
+  [paginationPageSizeSelector]="[10, 20, 50]"
+  [pagination]="true"
+  [paginationPageSize]="10" />
