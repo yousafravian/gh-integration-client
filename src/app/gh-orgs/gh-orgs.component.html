@@ -1,0 +1,11 @@
+<!-- The AG Grid component -->
+<h3>Git Organizations</h3>
+<ag-grid-angular
+  class="ag-theme-quartz"
+  style="height: calc(50vh - 180px);"
+  [rowData]="filteredData()"
+  [columnDefs]="colDefs"
+  [defaultColDef]="defaultColDef"
+  [paginationPageSizeSelector]="[10, 20, 50]"
+  [pagination]="true"
+  [paginationPageSize]="10" />

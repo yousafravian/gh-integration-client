@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { IGithubIntegration } from '../models/integration.model';
+import { Commits, IGithubIntegration, Issues, Orgs } from '../models/integration.model';
 import { ServerResponse } from '../models/server-response';
 import { SessionService } from './session-service.service';
+import { tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +15,17 @@ export class GhIntegrationService {
 
   readonly urls = {
     login: 'gh-integration/callback',
+    logout: 'gh-integration/logout',
     healthCheck: '/healthCheck',
+    organizations: 'gh-integration/organizations',
+    repos: 'gh-integration/repos',
+    commits: 'gh-integration/commits',
+    issues: 'gh-integration/issues',
+    pulls: 'gh-integration/pulls',
+    commitsTextSearch: 'gh-integration/commitsTextSearch',
+    issuesTextSearch: 'gh-integration/issuesTextSearch',
+    orgsTextSearch: 'gh-integration/orgsTextSearch',
+    reposTextSearch: 'gh-integration/reposTextSearch',
   }
 
   /**
@@ -33,7 +44,50 @@ export class GhIntegrationService {
   }
 
   logout() {
-    this.#sessionService.clearSession();
+    return this.#http.get<void>(this.urls.logout, {
+      params: {
+        userId: this.#sessionService.getUser().userId
+      }
+    }).pipe(
+      tap(() => {
+        this.#sessionService.clearSession();
+      })
+    );
   }
 
+  getAllOrganizations() {
+    return this.#http.get<any>(this.urls.organizations);
+  }
+
+  getAllRepos() {
+    return this.#http.get<any>(this.urls.repos);
+  }
+
+  getAllCommits() {
+    return this.#http.get<any>(this.urls.commits);
+  }
+
+  getAllIssues() {
+    return this.#http.get<any>(this.urls.issues);
+  }
+
+  getAllPulls() {
+    return this.#http.get<any>(this.urls.pulls);
+  }
+
+  commitsTextSearch( text: string) {
+    return this.#http.get<{ results: Commits }>(this.urls.commitsTextSearch, {
+      params: {
+        text
+      }
+    });
+  }
+
+  issuesTextSearch( text: string) {
+    return this.#http.get<{ results: Issues }>(this.urls.issuesTextSearch, {
+      params: {
+        text
+      }
+    });
+  }
 }

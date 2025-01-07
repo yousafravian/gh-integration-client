@@ -1,42 +1,80 @@
 @let isUserLoggedIn = sessionService.isLoggedIn();
-<mat-accordion class="header-align">
-  <mat-expansion-panel [expanded]="!isUserLoggedIn">
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Github
-        @if ( isUserLoggedIn ) {
-          &nbsp;&nbsp;
-          <i class="fa-solid fa-circle-check fa-cl-success"></i>
-          &nbsp;&nbsp;
-          <i matRipple matTooltip="re-sync user info" (click)="syncInfo($event)" class="fa-solid fa-arrows-rotate"></i>
-        }
-      </mat-panel-title>
-      <mat-panel-description>
-        @if (isUserLoggedIn) {
-          <span>&nbsp;</span>
-          <small>
-            <div>Admin: Last synced on {{ sessionService.getUser().lastSync | date: 'YYYY-MM-dd hh:mm a' }}</div>
-            <div>Sync type: Full</div>
-          </small>
-        }
-      </mat-panel-description>
-    </mat-expansion-panel-header>
-    @if (!isUserLoggedIn) {
-      <div class="integration-content">
-        <button mat-flat-button color="primary" (click)="onGHLogin()">Connect</button>
-        <div>Connect Sred.io to Github</div>
-      </div>
-    }
-    @else {
-      <div class="integration-content align-end">
-        <button mat-flat-button color="warn" (click)="onGHLogout()">Remove <i class="fa-solid fa-user-secret"></i></button>
-      </div>
-    }
-  </mat-expansion-panel>
-</mat-accordion>
+
+<div class="sticky-container">
+  <mat-accordion class="header-align">
+    <mat-expansion-panel [expanded]="!isUserLoggedIn">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Github
+          @if ( isUserLoggedIn ) {
+            &nbsp;&nbsp;
+            <i class="fa-solid fa-circle-check fa-cl-success"></i>
+            &nbsp;&nbsp;
+            <i matRipple matTooltip="re-sync user info" (click)="syncInfo($event)" class="fa-solid fa-arrows-rotate"></i>
+          }
+        </mat-panel-title>
+        <mat-panel-description>
+          @if (isUserLoggedIn) {
+            <span>&nbsp;</span>
+            <small>
+              <div>Admin: Last synced on {{ sessionService.getUser().lastSync | date: 'YYYY-MM-dd hh:mm a' }}</div>
+              <div>Sync type: Full</div>
+            </small>
+          }
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      @if (!isUserLoggedIn) {
+        <div class="integration-content">
+          <button mat-flat-button color="primary" (click)="onGHLogin()">Connect</button>
+          <div>Connect Sred.io to Github</div>
+        </div>
+      }
+      @else {
+        <div class="integration-content align-end">
+          <button mat-flat-button color="warn" (click)="onGHLogout()">Remove <i class="fa-solid fa-user-secret"></i></button>
+        </div>
+      }
+    </mat-expansion-panel>
+  </mat-accordion>
+
+  <div class="fields-container">
+    <mat-form-field>
+      <mat-label>Integration</mat-label>
+      <mat-select [(ngModel)]="integration">
+        <mat-option value="github">Github</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!--<mat-form-field>
+      <mat-label>Entity</mat-label>
+      <mat-select>
+        <mat-option value="projects">Projects</mat-option>
+      </mat-select>
+    </mat-form-field>-->
+
+    <mat-form-field floatLabel="always">
+      <mat-label>Search</mat-label>
+      <input #searchField  #searchModel='ngModel' [disabled]="loadingSearchResults || loadingCommits || loadingIssues" matInput [(ngModel)]="searchTerm"/>
+    </mat-form-field>
+  </div>
+</div>
 
 @if (isUserLoggedIn) {
   <div class="data-container mat-elevation-z4">
-    <app-gh-integration-data [ghIntegration]="sessionService.getUser()"/>
+    <div [ngxLoaderIndicator]="loadingOrgs">
+      <app-gh-orgs [organizations]="orgs$ | async"/>
+    </div>
+    <div [ngxLoaderIndicator]="loadingRepos">
+      <app-gh-repos [repos]="repos$ | async"/>
+    </div>
+    <div [ngxLoaderIndicator]="loadingCommits || loadingSearchResults">
+      <app-gh-commits [commits]="searchTerm().length ? commitsSearchResult : (commits$ | async)"/>
+    </div>
+    <div [ngxLoaderIndicator]="loadingIssues || loadingSearchResults">
+      <app-gh-issues [issues]="searchTerm().length ? issuesSearchResult : (issues$ | async)"/>
+    </div>
+    <div [ngxLoaderIndicator]="loadingPulls">
+      <app-gh-pulls [pulls]="pulls$ | async"/>
+    </div>
   </div>
 }
