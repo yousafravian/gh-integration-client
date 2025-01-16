@@ -1,16 +1,17 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import { Component, effect, input, output } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
-import type { IDatasource, IServerSideDatasource, PaginationChangedEvent } from 'ag-grid-community';
+import type { PaginationChangedEvent, SortChangedEvent } from 'ag-grid-community';
 import { ColDef, GridReadyEvent } from 'ag-grid-community';
 import { Commit, Issue, Org, Pull } from '../core/models/integration.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { flatten } from 'flat';
-import { GhIntegrationService, PaginatedResponse } from '../core/services/gh-integration.service';
+import { PaginatedResponse } from '../core/services/gh-integration.service';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 export type GridData = Org | Commit | Issue | Pull;
-export type CollectionType = 'Organizations' | 'Repos' | 'Repo Commits' | 'Repo Issues' | 'Repo Pull Requests';
+export type Collection = 'Organizations' | 'Repos' | 'Repo Commits' | 'Repo Issues' | 'Repo Pull Requests';
+export type CollectionType = Collection | `${Collection} Search Results`;
 
 @Component( {
   selector: 'app-gh-data-grid',
@@ -20,7 +21,8 @@ export type CollectionType = 'Organizations' | 'Repos' | 'Repo Commits' | 'Repo 
 } )
 export class GhDataGridComponent {
 
-  data = input.required<PaginatedResponse<any>>();
+  data = input<PaginatedResponse<any>>();
+  searchResults = input<GridData[]>([]);
   collectionName = input.required<CollectionType>();
   pageSize = input.required<number>();
 
@@ -38,8 +40,10 @@ export class GhDataGridComponent {
 
   constructor() {
     effect( () => {
-      if (this.data()?.data) {
-        this.colDefs = this.getColDefs( this.data().data );
+      if ( this.data()?.data?.length ) {
+        this.colDefs = this.getColDefs( this.data()!.data );
+      } else if (this.searchResults()?.length) {
+        this.colDefs = this.getColDefs( this.searchResults() );
       }
     } );
   }
@@ -60,7 +64,7 @@ export class GhDataGridComponent {
     return [];
   }
 
-  onGridReady(params: GridReadyEvent<GridData>) {
+  onGridReady( params: GridReadyEvent<GridData> ) {
   }
 
   paginationChangedEvent( paginationChangedEvent: PaginationChangedEvent<any> ) {
@@ -68,6 +72,12 @@ export class GhDataGridComponent {
   }
 
   handlePageEvent( pageEvent: PageEvent ) {
-    this.pageChange.emit(pageEvent);
+    this.pageChange.emit( pageEvent );
+  }
+
+  protected readonly length = length;
+
+  onSortChange( $event: SortChangedEvent<any> ) {
+    console.log( 'onSortChange', $event );
   }
 }

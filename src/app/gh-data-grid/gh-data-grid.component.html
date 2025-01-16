@@ -1,12 +1,20 @@
 <!-- The AG Grid component -->
+@let isSearchModeEnabled = !!searchResults()?.length;
+
+
 <h3>Git {{ collectionName() }}</h3>
 <ag-grid-angular
   class="ag-theme-quartz"
+  (sortChanged)="onSortChange($event)"
   style="height: calc(50vh - 180px);"
-  [rowData]="data()?.data"
+  [rowData]="isSearchModeEnabled ? searchResults() : data()?.data"
   (paginationChanged)="paginationChangedEvent($event)"
   (gridReady)="onGridReady($event)"
   [columnDefs]="colDefs"
+  [loading]="false"
+  [pagination]="isSearchModeEnabled"
   [defaultColDef]="defaultColDef"/>
-<mat-paginator [pageSize]="pageSize"
-               (page)="handlePageEvent($event)" [pageSizeOptions]="[10, 20, 50, 100]" [length]="data()?.meta?.totalDocs"></mat-paginator>
+@if(!isSearchModeEnabled) {
+  <mat-paginator [pageSize]="pageSize"
+                 (page)="handlePageEvent($event)" [pageSizeOptions]="[10, 20, 50, 100]" [length]="data()?.meta?.totalDocs"></mat-paginator>
+}

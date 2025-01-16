@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { GhIntegrationService } from '../core/services/gh-integration.service';
@@ -10,9 +10,9 @@ import { FormsModule, NgModel } from '@angular/forms';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
-import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, Subscription, switchMap, tap } from 'rxjs';
 import { NgxLoaderIndicatorDirective } from 'ngx-loader-indicator';
-import { Commits, Issues } from '../core/models/integration.model';
+import { Commit, Commits, Issue, Issues } from '../core/models/integration.model';
 import { CollectionType, GhDataGridComponent } from '../gh-data-grid/gh-data-grid.component';
 import { PageEvent } from '@angular/material/paginator';
 
@@ -37,11 +37,58 @@ import { PageEvent } from '@angular/material/paginator';
   templateUrl: './gh-integration.component.html',
   styleUrl: './gh-integration.component.scss'
 } )
-export class GhIntegrationComponent implements OnInit {
+export class GhIntegrationComponent {
   #ghIntegrationService = inject( GhIntegrationService );
   sessionService = inject( SessionService );
   searchModel = viewChild<NgModel>( 'searchModel' );
   searchField = viewChild<ElementRef<HTMLInputElement>>( 'searchField' );
+
+  sub: any;
+
+
+  constructor() {
+    effect( () => {
+      if ( !this.searchModel()?.control) {
+        return;
+      }
+      if (this.sub) {
+        this.sub.unsubscribe();
+        this.sub = undefined;
+      }
+
+      this.sub = this.searchModel()!.control.valueChanges
+        .pipe(
+          debounceTime( 500 ),
+          tap(val => {
+            if (val?.length === 0 || !val) {
+              this.issuesSearchResult = [];
+              this.commitsSearchResult = [];
+              this.commitsSearchResult = [];
+            }
+          }),
+          filter( v => !!v ),
+          distinctUntilChanged(),
+          tap( () => {
+            this.loadingSearchResults = true;
+          } ),
+          switchMap( ( value ) => forkJoin( {
+            commits: this.#ghIntegrationService.commitsTextSearch( value ),
+            issues: this.#ghIntegrationService.issuesTextSearch( value ),
+          } ) ),
+          finalize( () => {
+            this.loadingSearchResults = false;
+            setTimeout( () => {
+              this.searchField()?.nativeElement.focus();
+            }, 1000 );
+          } ),
+        )
+        .subscribe( ( response ) => {
+          this.loadingSearchResults = false;
+          this.commitsSearchResult = response.commits.results;
+          this.issuesSearchResult = response.issues.results;
+        } )
+    } );
+  }
 
   readonly PageSize = 10;
   readonly PageIndex = 1;
@@ -49,8 +96,8 @@ export class GhIntegrationComponent implements OnInit {
 
   // Signal for search input
   searchTerm = signal( '' );
-  loadingSearchResults = false
   integration = signal( 'github' );
+  loadingSearchResults = false
 
   loadingOrgs = true;
   loadingRepos = true;
@@ -63,33 +110,8 @@ export class GhIntegrationComponent implements OnInit {
   issues$ = this.#ghIntegrationService.getAllIssues( this.PageIndex, this.PageSize ).pipe( finalize( () => this.loadingIssues = false ) );
   pulls$ = this.#ghIntegrationService.getAllPulls( this.PageIndex, this.PageSize ).pipe( finalize( () => this.loadingPulls = false ) );
 
-  commitsSearchResult: Commits = [];
-  issuesSearchResult: Issues = [];
-
-  ngOnInit() {
-    this.searchModel()?.control.valueChanges
-      .pipe(
-        debounceTime( 500 ),
-        filter( v => !!v ),
-        distinctUntilChanged(),
-        tap( () => {
-          this.loadingSearchResults = true;
-          setTimeout( () => {
-            this.searchField()?.nativeElement.focus();
-          }, 1000 );
-        } ),
-        switchMap( ( value ) => forkJoin( {
-          commits: this.#ghIntegrationService.commitsTextSearch( value ),
-          issues: this.#ghIntegrationService.issuesTextSearch( value ),
-        } ) ),
-      )
-      .subscribe( ( response ) => {
-        this.loadingSearchResults = false;
-        console.log( response );
-        this.commitsSearchResult = response.commits.results;
-        this.issuesSearchResult = response.issues.results;
-      } );
-  }
+  commitsSearchResult: Commit[] = [];
+  issuesSearchResult: Issue[] = [];
 
   onGHLogin() {
     this.#ghIntegrationService.getCode();
