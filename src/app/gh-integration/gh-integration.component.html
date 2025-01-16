@@ -6,11 +6,12 @@
       <mat-expansion-panel-header>
         <mat-panel-title>
           Github
-          @if ( isUserLoggedIn ) {
+          @if (isUserLoggedIn) {
             &nbsp;&nbsp;
             <i class="fa-solid fa-circle-check fa-cl-success"></i>
             &nbsp;&nbsp;
-            <i matRipple matTooltip="re-sync user info" (click)="syncInfo($event)" class="fa-solid fa-arrows-rotate"></i>
+            <i matRipple matTooltip="re-sync user info" (click)="syncInfo($event)"
+               class="fa-solid fa-arrows-rotate"></i>
           }
         </mat-panel-title>
         <mat-panel-description>
@@ -28,53 +29,61 @@
           <button mat-flat-button color="primary" (click)="onGHLogin()">Connect</button>
           <div>Connect Sred.io to Github</div>
         </div>
-      }
-      @else {
+      } @else {
         <div class="integration-content align-end">
-          <button mat-flat-button color="warn" (click)="onGHLogout()">Remove <i class="fa-solid fa-user-secret"></i></button>
+          <button mat-flat-button color="warn" (click)="onGHLogout()">Remove <i class="fa-solid fa-user-secret"></i>
+          </button>
         </div>
       }
     </mat-expansion-panel>
   </mat-accordion>
 
-  <div class="fields-container">
-    <mat-form-field>
-      <mat-label>Integration</mat-label>
-      <mat-select [(ngModel)]="integration">
-        <mat-option value="github">Github</mat-option>
-      </mat-select>
-    </mat-form-field>
+  @if (isUserLoggedIn) {
+    <div class="fields-container">
+      <mat-form-field>
+        <mat-label>Integration</mat-label>
+        <mat-select [(ngModel)]="integration">
+          <mat-option value="github">Github</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-    <!--<mat-form-field>
-      <mat-label>Entity</mat-label>
-      <mat-select>
-        <mat-option value="projects">Projects</mat-option>
-      </mat-select>
-    </mat-form-field>-->
-
-    <mat-form-field floatLabel="always">
-      <mat-label>Search</mat-label>
-      <input #searchField  #searchModel='ngModel' [disabled]="loadingSearchResults || loadingCommits || loadingIssues" matInput [(ngModel)]="searchTerm"/>
-    </mat-form-field>
-  </div>
+      <mat-form-field floatLabel="always">
+        <mat-label>Search</mat-label>
+        <input #searchField #searchModel='ngModel' [disabled]="loadingSearchResults || loadingCommits || loadingIssues"
+               matInput [(ngModel)]="searchTerm"/>
+      </mat-form-field>
+      <pre><code>{{ loadingSearchResults }}</code></pre>
+      <pre><code>{{ loadingCommits }}</code></pre>
+      <pre><code>{{ loadingIssues }}</code></pre>
+    </div>
+  }
 </div>
 
 @if (isUserLoggedIn) {
   <div class="data-container mat-elevation-z4">
     <div [ngxLoaderIndicator]="loadingOrgs">
-      <app-gh-orgs [organizations]="orgs$ | async"/>
+      <app-gh-data-grid [data]="(orgs$ | async)!" collectionName="Organizations"
+                        (pageChange)="handlePageChange('Organizations', $event )"
+                        [pageSize]="PageSize"></app-gh-data-grid>
     </div>
     <div [ngxLoaderIndicator]="loadingRepos">
-      <app-gh-repos [repos]="repos$ | async"/>
+      <app-gh-data-grid [data]="(repos$ | async)!" collectionName="Repos"
+                        (pageChange)="handlePageChange('Repos', $event )" [pageSize]="PageSize"></app-gh-data-grid>
     </div>
     <div [ngxLoaderIndicator]="loadingCommits || loadingSearchResults">
-      <app-gh-commits [commits]="searchTerm().length ? commitsSearchResult : (commits$ | async)"/>
+      <app-gh-data-grid [data]="(commits$ | async)!" collectionName="Repo Commits"
+                        (pageChange)="handlePageChange('Repo Commits', $event )"
+                        [pageSize]="PageSize"></app-gh-data-grid>
     </div>
     <div [ngxLoaderIndicator]="loadingIssues || loadingSearchResults">
-      <app-gh-issues [issues]="searchTerm().length ? issuesSearchResult : (issues$ | async)"/>
+      <app-gh-data-grid [data]="(issues$ | async)!" collectionName="Repo Issues"
+                        (pageChange)="handlePageChange('Repo Issues', $event )"
+                        [pageSize]="PageSize"></app-gh-data-grid>
     </div>
     <div [ngxLoaderIndicator]="loadingPulls">
-      <app-gh-pulls [pulls]="pulls$ | async"/>
+      <app-gh-data-grid [data]="(pulls$ | async)!" collectionName="Repo Pull Requests"
+                        (pageChange)="handlePageChange('Repo Pull Requests', $event )"
+                        [pageSize]="PageSize"></app-gh-data-grid>
     </div>
   </div>
 }

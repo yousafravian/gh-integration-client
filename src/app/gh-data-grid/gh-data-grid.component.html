@@ -1,0 +1,12 @@
+<!-- The AG Grid component -->
+<h3>Git {{ collectionName() }}</h3>
+<ag-grid-angular
+  class="ag-theme-quartz"
+  style="height: calc(50vh - 180px);"
+  [rowData]="data()?.data"
+  (paginationChanged)="paginationChangedEvent($event)"
+  (gridReady)="onGridReady($event)"
+  [columnDefs]="colDefs"
+  [defaultColDef]="defaultColDef"/>
+<mat-paginator [pageSize]="pageSize"
+               (page)="handlePageEvent($event)" [pageSizeOptions]="[10, 20, 50, 100]" [length]="data()?.meta?.totalDocs"></mat-paginator>

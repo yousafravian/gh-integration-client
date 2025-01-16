@@ -1,9 +1,24 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Commits, IGithubIntegration, Issues, Orgs } from '../models/integration.model';
+import { Commit, Commits, IGithubIntegration, Issue, Issues, Org, Orgs, Pull, Repo } from '../models/integration.model';
 import { ServerResponse } from '../models/server-response';
 import { SessionService } from './session-service.service';
 import { tap } from 'rxjs';
+
+
+export interface PaginatedResponse<T> {
+  data: T[]; // Array of data items of generic type T
+  meta: {
+    totalDocs: number; // Total number of documents
+    totalPages: number; // Total number of pages
+    page: number; // Current page number
+    limit: number; // Number of items per page
+    hasNextPage: boolean; // Indicates if there is a next page
+    hasPrevPage: boolean; // Indicates if there is a previous page
+    nextPage: number | null; // Next page number (null if none)
+    prevPage: number | null; // Previous page number (null if none)
+  };
+}
 
 @Injectable({
   providedIn: 'root',
@@ -14,18 +29,17 @@ export class GhIntegrationService {
   #sessionService = inject(SessionService);
 
   readonly urls = {
-    login: 'gh-integration/callback',
-    logout: 'gh-integration/logout',
-    healthCheck: '/healthCheck',
-    organizations: 'gh-integration/organizations',
-    repos: 'gh-integration/repos',
-    commits: 'gh-integration/commits',
-    issues: 'gh-integration/issues',
-    pulls: 'gh-integration/pulls',
-    commitsTextSearch: 'gh-integration/commitsTextSearch',
-    issuesTextSearch: 'gh-integration/issuesTextSearch',
-    orgsTextSearch: 'gh-integration/orgsTextSearch',
-    reposTextSearch: 'gh-integration/reposTextSearch',
+    login: 'integration/',
+    logout: 'integration/logout',
+    organizations: 'organizations',
+    repos: 'repos',
+    commits: 'commits',
+    issues: 'issues',
+    pulls: 'pulls',
+    commitsTextSearch: 'commits/textSearch',
+    issuesTextSearch: 'issues/textSearch',
+    orgsTextSearch: 'orgs/textSearch',
+    reposTextSearch: 'repos/textSearch',
   }
 
   /**
@@ -55,24 +69,24 @@ export class GhIntegrationService {
     );
   }
 
-  getAllOrganizations() {
-    return this.#http.get<any>(this.urls.organizations);
+  getAllOrganizations(pageIndex: number = 1, pageSize: number = 10) {
+    return this.#http.get<PaginatedResponse<Org>>(`${this.urls.organizations}?page=${pageIndex}&limit=${pageSize}`);
   }
 
-  getAllRepos() {
-    return this.#http.get<any>(this.urls.repos);
+  getAllRepos(pageIndex: number = 1, pageSize: number = 10) {
+    return this.#http.get<PaginatedResponse<Repo>>(`${this.urls.repos}?page=${pageIndex}&limit=${pageSize}`);
   }
 
-  getAllCommits() {
-    return this.#http.get<any>(this.urls.commits);
+  getAllCommits(pageIndex: number = 1, pageSize: number = 10) {
+    return this.#http.get<PaginatedResponse<Commit>>(`${this.urls.commits}?page=${pageIndex}&limit=${pageSize}`);
   }
 
-  getAllIssues() {
-    return this.#http.get<any>(this.urls.issues);
+  getAllIssues(pageIndex: number = 1, pageSize: number = 10) {
+    return this.#http.get<PaginatedResponse<Issue>>(`${this.urls.issues}?page=${pageIndex}&limit=${pageSize}`);
   }
 
-  getAllPulls() {
-    return this.#http.get<any>(this.urls.pulls);
+  getAllPulls(pageIndex: number = 1, pageSize: number = 10) {
+    return this.#http.get<PaginatedResponse<Pull>>(`${this.urls.pulls}?page=${pageIndex}&limit=${pageSize}`);
   }
 
   commitsTextSearch( text: string) {
