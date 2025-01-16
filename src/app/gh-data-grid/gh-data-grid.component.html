@@ -1,20 +1,36 @@
 <!-- The AG Grid component -->
-@let isSearchModeEnabled = !!searchResults()?.length;
+@let isSearchModeEnabled = !!searchResults()?.length || searchEnabled();
 
 
 <h3>Git {{ collectionName() }}</h3>
-<ag-grid-angular
-  class="ag-theme-quartz"
-  (sortChanged)="onSortChange($event)"
-  style="height: calc(50vh - 180px);"
-  [rowData]="isSearchModeEnabled ? searchResults() : data()?.data"
-  (paginationChanged)="paginationChangedEvent($event)"
-  (gridReady)="onGridReady($event)"
-  [columnDefs]="colDefs"
-  [loading]="false"
-  [pagination]="isSearchModeEnabled"
-  [defaultColDef]="defaultColDef"/>
-@if(!isSearchModeEnabled) {
-  <mat-paginator [pageSize]="pageSize"
-                 (page)="handlePageEvent($event)" [pageSizeOptions]="[10, 20, 50, 100]" [length]="data()?.meta?.totalDocs"></mat-paginator>
+@if (isSearchModeEnabled) {
+
+  <ag-grid-angular
+    class="ag-theme-quartz"
+    style="height: calc(50vh - 180px)"
+    [rowData]="searchResults()"
+    (gridReady)="onGridReady($event)"
+    [columnDefs]="colDefs"
+    [loading]="false"
+    [pagination]="true"
+    [defaultColDef]="defaultColDef"/>
+} @else {
+
+  <div [ngxLoaderIndicator]="loading">
+    <ag-grid-angular
+      class="ag-theme-quartz"
+      (sortChanged)="onSortChange($event)"
+      rowModelType="infinite"
+      [datasource]="dataSource"
+      style="height: calc(50vh - 180px);"
+      (paginationChanged)="paginationChangedEvent($event)"
+      (gridReady)="onGridReady($event)"
+      [columnDefs]="colDefs"
+      [loading]="loading"
+      [pagination]="true"
+      [cacheBlockSize]="10"
+      [paginationPageSize]="10"
+      [paginationPageSizeSelector]="[10]"
+      [defaultColDef]="defaultColDef"/>
+  </div>
 }

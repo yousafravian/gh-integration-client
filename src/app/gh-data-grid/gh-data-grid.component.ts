@@ -1,32 +1,42 @@
-import { Component, effect, input, output } from '@angular/core';
+import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { PaginationChangedEvent, SortChangedEvent } from 'ag-grid-community';
 import { ColDef, GridReadyEvent } from 'ag-grid-community';
-import { Commit, Issue, Org, Pull } from '../core/models/integration.model';
+import { Commit, Issue, Org, Pull, Repo } from '../core/models/integration.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { flatten } from 'flat';
-import { PaginatedResponse } from '../core/services/gh-integration.service';
+import { GhIntegrationService, PaginatedResponse } from '../core/services/gh-integration.service';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { JsonPipe } from '@angular/common';
+import { NgxLoaderIndicatorDirective } from 'ngx-loader-indicator';
 
-export type GridData = Org | Commit | Issue | Pull;
+export type GridData = Org | Commit | Issue | Pull | Repo;
 export type Collection = 'Organizations' | 'Repos' | 'Repo Commits' | 'Repo Issues' | 'Repo Pull Requests';
 export type CollectionType = Collection | `${Collection} Search Results`;
 
 @Component( {
   selector: 'app-gh-data-grid',
-  imports: [ AgGridAngular, MatFormFieldModule, FormsModule, MatPaginatorModule ], // Add Angular Data Grid Component
+  imports: [ AgGridAngular, MatFormFieldModule, FormsModule, MatPaginatorModule, JsonPipe, NgxLoaderIndicatorDirective ], // Add Angular Data Grid Component
   templateUrl: './gh-data-grid.component.html',
   styleUrl: './gh-data-grid.component.scss',
 } )
 export class GhDataGridComponent {
 
-  data = input<PaginatedResponse<any>>();
-  searchResults = input<GridData[]>([]);
-  collectionName = input.required<CollectionType>();
-  pageSize = input.required<number>();
+  integrationService = inject( GhIntegrationService );
 
-  pageChange = output<PageEvent>();
+  searchResults = input<GridData[]>([]);
+  searchEnabled = input<boolean>(false);
+  collectionName = input.required<CollectionType>();
+  serverHandler = computed(() => {
+    if (this.collectionName()) {
+      return this.integrationService.getDataHandler(this.collectionName());
+    }
+
+    return null;
+  });
+
+  loading = false;
 
   // Column definitions with flex property for full-width distribution
   colDefs: ColDef[] = [];
@@ -38,11 +48,36 @@ export class GhDataGridComponent {
     resizable: true,
   };
 
+  dataSource = {
+    getRows: (params: any) => {
+      // sorting calc
+      const sortModel = params.sortModel; // Contains sorting info
+      const sortColumn = sortModel[0]?.colId || null;
+      const sortDirection = sortModel[0]?.sort || null;
+
+      // pagination calc
+      const startRow = params.startRow || 0; // Start row index
+      const endRow = params.endRow || 10; // End row index
+      const pageSize = endRow - startRow; // Number of items per page
+      const pageIndex = Math.floor( startRow / pageSize ) + 1; // Current page index
+
+      // Fetch sorted data from server
+      const handler = this.serverHandler();
+      if (handler) {
+        this.loading = true;
+        handler(sortColumn, sortDirection, pageIndex, pageSize).subscribe((data) => {
+          this.colDefs = this.getColDefs( data!.data );
+          this.loading = false;
+          params.successCallback(data.data, data.meta.totalDocs);
+        });
+      }
+
+    },
+  };
+
   constructor() {
     effect( () => {
-      if ( this.data()?.data?.length ) {
-        this.colDefs = this.getColDefs( this.data()!.data );
-      } else if (this.searchResults()?.length) {
+      if (this.searchEnabled()) {
         this.colDefs = this.getColDefs( this.searchResults() );
       }
     } );
@@ -68,16 +103,16 @@ export class GhDataGridComponent {
   }
 
   paginationChangedEvent( paginationChangedEvent: PaginationChangedEvent<any> ) {
-    console.log( 'paginationChangedEvent', paginationChangedEvent );
-  }
-
-  handlePageEvent( pageEvent: PageEvent ) {
-    this.pageChange.emit( pageEvent );
+    if ( paginationChangedEvent.newPage ) {
+      paginationChangedEvent.api.purgeInfiniteCache();
+    }
   }
 
   protected readonly length = length;
 
   onSortChange( $event: SortChangedEvent<any> ) {
-    console.log( 'onSortChange', $event );
+    if ($event.columns) {
+      $event.api.purgeInfiniteCache();
+    }
   }
 }
