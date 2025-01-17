@@ -33,6 +33,7 @@ export class GhIntegrationService {
 
   readonly urls = {
     login: 'integration/',
+    checkSyncStatus: 'integration/checkSyncStatus',
     logout: 'integration/logout',
     organizations: 'organizations',
     repos: 'repos',
@@ -60,10 +61,35 @@ export class GhIntegrationService {
     } );
   }
 
+  checkSyncStatus(userId: string) {
+    // poll to server every 2 second until abort signal
+    return new Observable<ServerResponse<IGithubIntegration>>(subscriber => {
+      const interval = setInterval(() => {
+        this.#http.get<ServerResponse<IGithubIntegration>>( this.urls.checkSyncStatus, {
+          params: {
+            userId
+          }
+        } ).subscribe({
+          next: (res) => {
+            subscriber.next(res);
+            if (!res || res?.payload?.isProc === 0) {
+              clearInterval(interval);
+              subscriber.complete();
+            }
+          },
+          error: (e) => {
+            clearInterval(interval);
+            subscriber.error(e);
+          }
+        });
+      }, 2000);
+    });
+  }
+
   logout() {
     return this.#http.get<void>( this.urls.logout, {
       params: {
-        userId: this.#sessionService.getUser().userId
+        userId: this.#sessionService.getUser()!.userId
       }
     } ).pipe(
       tap( () => {
@@ -81,7 +107,6 @@ export class GhIntegrationService {
   }
 
   getAllCommits( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10 ) {
-    console.log( sortDirection, sortColumn, pageIndex, pageSize );
     return this.#http.get<PaginatedResponse<Commit>>( `${ this.urls.commits }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
   }
 

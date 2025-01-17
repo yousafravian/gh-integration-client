@@ -31,6 +31,23 @@
 .sticky-container {
   position: sticky;
   top: 0;
-  z-index: 99999;
+  z-index: 10;
   background: whitesmoke;
+}
+
+.centered-animation {
+  display: grid;
+  place-content: center;
+}
+
+.alert-container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #36454F;
+  font-weight: 100;
+  margin: 5px 0 20px 0;
+  background: rgba(54, 69, 79, 0.20);
 }

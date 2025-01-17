@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output } from '@angular/core';
+import { Component, computed, effect, inject, input } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { PaginationChangedEvent, SortChangedEvent } from 'ag-grid-community';
 import { ColDef, GridReadyEvent } from 'ag-grid-community';
@@ -6,18 +6,18 @@ import { Commit, Issue, Org, Pull, Repo } from '../core/models/integration.model
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { flatten } from 'flat';
-import { GhIntegrationService, PaginatedResponse } from '../core/services/gh-integration.service';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { JsonPipe } from '@angular/common';
+import { GhIntegrationService } from '../core/services/gh-integration.service';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { NgxLoaderIndicatorDirective } from 'ngx-loader-indicator';
+import { CellRendererComponent } from './links-renderer/cell-renderer.component';
 
 export type GridData = Org | Commit | Issue | Pull | Repo;
 export type Collection = 'Organizations' | 'Repos' | 'Repo Commits' | 'Repo Issues' | 'Repo Pull Requests';
-export type CollectionType = Collection | `${Collection} Search Results`;
+export type CollectionType = Collection | `${ Collection } Search Results`;
 
 @Component( {
   selector: 'app-gh-data-grid',
-  imports: [ AgGridAngular, MatFormFieldModule, FormsModule, MatPaginatorModule, JsonPipe, NgxLoaderIndicatorDirective ], // Add Angular Data Grid Component
+  imports: [ AgGridAngular, MatFormFieldModule, FormsModule, MatPaginatorModule, NgxLoaderIndicatorDirective ], // Add Angular Data Grid Component
   templateUrl: './gh-data-grid.component.html',
   styleUrl: './gh-data-grid.component.scss',
 } )
@@ -25,16 +25,16 @@ export class GhDataGridComponent {
 
   integrationService = inject( GhIntegrationService );
 
-  searchResults = input<GridData[]>([]);
-  searchEnabled = input<boolean>(false);
+  searchResults = input<GridData[]>( [] );
+  searchEnabled = input<boolean>( false );
   collectionName = input.required<CollectionType>();
-  serverHandler = computed(() => {
-    if (this.collectionName()) {
-      return this.integrationService.getDataHandler(this.collectionName());
+  serverHandler = computed( () => {
+    if ( this.collectionName() ) {
+      return this.integrationService.getDataHandler( this.collectionName() );
     }
 
     return null;
-  });
+  } );
 
   loading = false;
 
@@ -49,11 +49,11 @@ export class GhDataGridComponent {
   };
 
   dataSource = {
-    getRows: (params: any) => {
+    getRows: ( params: any ) => {
       // sorting calc
       const sortModel = params.sortModel; // Contains sorting info
-      const sortColumn = sortModel[0]?.colId || null;
-      const sortDirection = sortModel[0]?.sort || null;
+      const sortColumn = sortModel[ 0 ]?.colId || null;
+      const sortDirection = sortModel[ 0 ]?.sort || null;
 
       // pagination calc
       const startRow = params.startRow || 0; // Start row index
@@ -63,13 +63,13 @@ export class GhDataGridComponent {
 
       // Fetch sorted data from server
       const handler = this.serverHandler();
-      if (handler) {
+      if ( handler ) {
         this.loading = true;
-        handler(sortColumn, sortDirection, pageIndex, pageSize).subscribe((data) => {
+        handler( sortColumn, sortDirection, pageIndex, pageSize ).subscribe( ( data ) => {
           this.colDefs = this.getColDefs( data!.data );
           this.loading = false;
-          params.successCallback(data.data, data.meta.totalDocs);
-        });
+          params.successCallback( data.data, data.meta.totalDocs );
+        } );
       }
 
     },
@@ -77,20 +77,22 @@ export class GhDataGridComponent {
 
   constructor() {
     effect( () => {
-      if (this.searchEnabled()) {
+      if ( this.searchEnabled() ) {
         this.colDefs = this.getColDefs( this.searchResults() );
       }
     } );
   }
 
-  getColDefs( data: GridData[] ) {
-    const flattenedData = data.map( ( item ) => flatten( item ) ) as object[];
+  getColDefs( data: GridData[] ): ColDef[] {
+    const flattenedData: GridData[] = data.map( ( item ) => flatten( item ) ) as GridData[];
     if ( flattenedData.length ) {
 
-      return Object.keys( flattenedData[ 0 ] ).map( ( key ) => {
+      return Object.keys( flattenedData[ 0 ] ).map( ( key: string ) => {
+        const keyVal = (flattenedData[0] as any)[key] as string | boolean | number;
         return {
           field: key,
           headerName: key,
+          cellRenderer: CellRendererComponent,
           filter: 'agTextColumnFilter',
         };
       } );
@@ -111,7 +113,7 @@ export class GhDataGridComponent {
   protected readonly length = length;
 
   onSortChange( $event: SortChangedEvent<any> ) {
-    if ($event.columns) {
+    if ( $event.columns ) {
       $event.api.purgeInfiniteCache();
     }
   }

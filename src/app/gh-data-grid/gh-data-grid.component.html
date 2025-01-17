@@ -1,10 +1,9 @@
 <!-- The AG Grid component -->
-@let isSearchModeEnabled = !!searchResults()?.length || searchEnabled();
+@let isSearchModeEnabled = !!searchResults().length || searchEnabled();
 
 
 <h3>Git {{ collectionName() }}</h3>
 @if (isSearchModeEnabled) {
-
   <ag-grid-angular
     class="ag-theme-quartz"
     style="height: calc(50vh - 180px)"
@@ -15,7 +14,6 @@
     [pagination]="true"
     [defaultColDef]="defaultColDef"/>
 } @else {
-
   <div [ngxLoaderIndicator]="loading">
     <ag-grid-angular
       class="ag-theme-quartz"

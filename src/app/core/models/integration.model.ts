@@ -20,4 +20,5 @@ export interface IGithubIntegration {
   token: string; // Access Token
   connectedAt?: Date;
   lastSync?: Date;
+  isProc: number;
 }

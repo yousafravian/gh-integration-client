@@ -20,7 +20,12 @@ export class SessionService {
   }
 
   getUser() {
-    return JSON.parse(localStorage.getItem('user') ?? '') as IGithubIntegration;
+    try {
+      return JSON.parse(localStorage.getItem('user') ?? '') as IGithubIntegration;
+    } catch ( e ) {
+      console.error(e);
+      return null;
+    }
   }
 
   clearSession() {

@@ -13,8 +13,9 @@ import { MatSelect } from '@angular/material/select';
 import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, Subscription, switchMap, tap } from 'rxjs';
 import { NgxLoaderIndicatorDirective } from 'ngx-loader-indicator';
 import { Commit, Issue } from '../core/models/integration.model';
-import { CollectionType, GhDataGridComponent } from '../gh-data-grid/gh-data-grid.component';
-import { PageEvent } from '@angular/material/paginator';
+import { GhDataGridComponent } from '../gh-data-grid/gh-data-grid.component';
+import { AnimationOptions, LottieComponent } from 'ngx-lottie';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component( {
   selector: 'app-gh-integration',
@@ -32,6 +33,8 @@ import { PageEvent } from '@angular/material/paginator';
     MatSelect,
     NgxLoaderIndicatorDirective,
     GhDataGridComponent,
+    LottieComponent,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './gh-integration.component.html',
   styleUrl: './gh-integration.component.scss'
@@ -42,6 +45,10 @@ export class GhIntegrationComponent {
 
   searchModel = viewChild<NgModel>( 'searchModel' );
   searchField = viewChild<ElementRef<HTMLInputElement>>( 'searchField' );
+  isSyncing = false;
+  options: AnimationOptions = {
+    path: 'animation.json',
+  };
 
   sub?: Subscription;
 
@@ -86,6 +93,22 @@ export class GhIntegrationComponent {
           this.issuesSearchResult = response.issues.results;
         } )
     } );
+
+    const userId = this.sessionService.getUser()?.userId;
+    if ( userId ) {
+      this.#ghIntegrationService.checkSyncStatus( userId ).subscribe( {
+        next: ( res ) => {
+          const wasPreviouslySyncing = this.isSyncing;
+          this.isSyncing = res.payload.isProc === 1;
+          if ( wasPreviouslySyncing && !this.isSyncing ) {
+            window.location.reload();
+          }
+        },
+        error: ( e ) => {
+          this.isSyncing = false;
+        }
+      } );
+    }
   }
 
   // Signal for search input

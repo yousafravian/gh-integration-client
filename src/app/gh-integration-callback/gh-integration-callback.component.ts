@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GhIntegrationService } from '../core/services/gh-integration.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SessionService } from '../core/services/session-service.service';
+import { io, Socket } from 'socket.io-client';
 
 @Component({
   selector: 'app-gh-integration-cb',
@@ -22,8 +23,12 @@ export class GhIntegrationCallbackComponent implements OnInit {
   #ghIntegrationService = inject(GhIntegrationService);
   #sessionService = inject(SessionService);
   #snackBar = inject(MatSnackBar);
+  socket?: Socket;
 
   ngOnInit() {
+    this.socket = io( "ws://localhost:3000", {
+      transports: [ 'websocket' ],
+    } );
     if (!this.#activatedRoute.snapshot.queryParams?.['code']) {
       this.#snackBar.open('No code provided', 'Dismiss');
     }
@@ -44,5 +49,9 @@ export class GhIntegrationCallbackComponent implements OnInit {
           console.error(e);
         }
       })
+
+    this.socket.on('syncProcessing', (data) => {
+
+    });
   }
 }
