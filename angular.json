@@ -33,7 +33,6 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
-              "./node_modules/ngx-lightbox/lightbox.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -95,7 +94,6 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
-              "./node_modules/ngx-lightbox/lightbox.css",
               "src/styles.scss"
             ],
             "scripts": []
