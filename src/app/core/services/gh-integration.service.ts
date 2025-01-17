@@ -7,6 +7,7 @@ import { Observable, tap } from 'rxjs';
 import { CollectionType, GridData } from '../../gh-data-grid/gh-data-grid.component';
 
 
+
 export interface PaginatedResponse<T> {
   data: T[]; // Array of data items of generic type T
   meta: {
@@ -21,7 +22,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export type DataFetchHandler = ( sortColumn: string, sortDirection: 'asc' | 'desc', pageIndex: number, pageSize: number ) => Observable<PaginatedResponse<GridData>>;
+export type DataFetchHandler = ( sortColumn: string, sortDirection: 'asc' | 'desc', pageIndex: number, pageSize: number, filterModel: object ) => Observable<PaginatedResponse<GridData>>;
 
 @Injectable( {
   providedIn: 'root',
@@ -61,29 +62,29 @@ export class GhIntegrationService {
     } );
   }
 
-  checkSyncStatus(userId: string) {
+  checkSyncStatus( userId: string ) {
     // poll to server every 2 second until abort signal
-    return new Observable<ServerResponse<IGithubIntegration>>(subscriber => {
-      const interval = setInterval(() => {
+    return new Observable<ServerResponse<IGithubIntegration>>( subscriber => {
+      const interval = setInterval( () => {
         this.#http.get<ServerResponse<IGithubIntegration>>( this.urls.checkSyncStatus, {
           params: {
             userId
           }
-        } ).subscribe({
-          next: (res) => {
-            subscriber.next(res);
-            if (!res || res?.payload?.isProc === 0) {
-              clearInterval(interval);
+        } ).subscribe( {
+          next: ( res ) => {
+            subscriber.next( res );
+            if ( !res || res?.payload?.isProc === 0 ) {
+              clearInterval( interval );
               subscriber.complete();
             }
           },
-          error: (e) => {
-            clearInterval(interval);
-            subscriber.error(e);
+          error: ( e ) => {
+            clearInterval( interval );
+            subscriber.error( e );
           }
-        });
-      }, 2000);
-    });
+        } );
+      }, 2000 );
+    } );
   }
 
   logout() {
@@ -98,24 +99,64 @@ export class GhIntegrationService {
     );
   }
 
-  getAllOrganizations( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, ) {
-    return this.#http.get<PaginatedResponse<Org>>( `${ this.urls.organizations }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
+  getAllOrganizations( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, filterModel: object ) {
+    return this.#http.get<PaginatedResponse<Org>>( `${ this.urls.organizations }`, {
+      params: {
+        page: pageIndex.toString(),
+        limit: pageSize.toString(),
+        sortColumn,
+        sortDirection,
+        filterModel: JSON.stringify( filterModel )
+      }
+    } );
   }
 
-  getAllRepos( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10 ) {
-    return this.#http.get<PaginatedResponse<Repo>>( `${ this.urls.repos }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
+  getAllRepos( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, filterModel: object ) {
+    return this.#http.get<PaginatedResponse<Repo>>( `${ this.urls.repos }`, {
+      params: {
+        page: pageIndex.toString(),
+        limit: pageSize.toString(),
+        sortColumn,
+        sortDirection,
+        filterModel: JSON.stringify( filterModel )
+      }
+    } );
   }
 
-  getAllCommits( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10 ) {
-    return this.#http.get<PaginatedResponse<Commit>>( `${ this.urls.commits }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
+  getAllCommits( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, filterModel: object ) {
+    return this.#http.get<PaginatedResponse<Commit>>( `${ this.urls.commits }`, {
+      params: {
+        page: pageIndex.toString(),
+        limit: pageSize.toString(),
+        sortColumn,
+        sortDirection,
+        filterModel: JSON.stringify( filterModel )
+      }
+    } );
   }
 
-  getAllIssues( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10 ) {
-    return this.#http.get<PaginatedResponse<Issue>>( `${ this.urls.issues }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
+  getAllIssues( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, filterModel: object ) {
+    return this.#http.get<PaginatedResponse<Issue>>( `${ this.urls.issues }`, {
+      params: {
+        page: pageIndex.toString(),
+        limit: pageSize.toString(),
+        sortColumn,
+        sortDirection,
+        filterModel: JSON.stringify( filterModel )
+      }
+    } );
   }
 
-  getAllPulls( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10 ) {
-    return this.#http.get<PaginatedResponse<Pull>>( `${ this.urls.pulls }?page=${ pageIndex }&limit=${ pageSize }&sortColumn=${ sortColumn }&sortDirection=${ sortDirection }` );
+  getAllPulls( sortColumn: string, sortDirection: 'asc' | 'desc' = 'asc', pageIndex: number = 1, pageSize: number = 10, filterModel: object ) {
+    return this.#http.get<PaginatedResponse<Pull>>( `${ this.urls.pulls }`, {
+      params: {
+        page: pageIndex.toString(),
+        limit: pageSize.toString(),
+        sortColumn,
+        sortDirection,
+        filterModel: JSON.stringify( filterModel )
+      }
+    } );
   }
 
   commitsTextSearch( text: string ) {

@@ -59,13 +59,16 @@ export class GhDataGridComponent {
       const startRow = params.startRow || 0; // Start row index
       const endRow = params.endRow || 10; // End row index
       const pageSize = endRow - startRow; // Number of items per page
-      const pageIndex = Math.floor( startRow / pageSize ) + 1; // Current page index
+      const pageIndex = Math.floor( startRow / pageSize ) + 1; // Current page index'
+
+      const filterModel = params.filterModel; // Contains filter info
+
 
       // Fetch sorted data from server
       const handler = this.serverHandler();
       if ( handler ) {
         this.loading = true;
-        handler( sortColumn, sortDirection, pageIndex, pageSize ).subscribe( ( data ) => {
+        handler( sortColumn, sortDirection, pageIndex, pageSize, filterModel ).subscribe( ( data ) => {
           this.colDefs = this.getColDefs( data!.data );
           this.loading = false;
           params.successCallback( data.data, data.meta.totalDocs );
