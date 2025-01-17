@@ -8,8 +8,6 @@ import { apiInterceptor } from './core/interceptor/api.interceptor';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideEnvironmentNgxLoaderIndicator } from 'ngx-loader-indicator';
 import { SocketIoConfig, SocketIoModule } from 'ngx-socket-io';
-import { provideLottieOptions } from 'ngx-lottie';
-import player from 'lottie-web';
 
 const config: SocketIoConfig = { url: 'http://localhost:3000', options: { path: 'realtime-data' } };
 
@@ -19,9 +17,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter( routes ),
     provideAnimationsAsync(),
     provideAnimations(),
-    provideLottieOptions( {
-      player: () => player,
-    } ),
     importProvidersFrom( SocketIoModule.forRoot( config ) ),
     provideEnvironmentNgxLoaderIndicator(),
     provideHttpClient(

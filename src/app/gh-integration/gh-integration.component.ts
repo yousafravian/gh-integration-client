@@ -14,7 +14,6 @@ import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, Subscri
 import { NgxLoaderIndicatorDirective } from 'ngx-loader-indicator';
 import { Commit, Issue } from '../core/models/integration.model';
 import { GhDataGridComponent } from '../gh-data-grid/gh-data-grid.component';
-import { AnimationOptions, LottieComponent } from 'ngx-lottie';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component( {
@@ -33,7 +32,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatSelect,
     NgxLoaderIndicatorDirective,
     GhDataGridComponent,
-    LottieComponent,
     MatProgressSpinnerModule,
   ],
   templateUrl: './gh-integration.component.html',
@@ -46,9 +44,6 @@ export class GhIntegrationComponent {
   searchModel = viewChild<NgModel>( 'searchModel' );
   searchField = viewChild<ElementRef<HTMLInputElement>>( 'searchField' );
   isSyncing = false;
-  options: AnimationOptions = {
-    path: 'animation.json',
-  };
 
   sub?: Subscription;
 
